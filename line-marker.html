@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- SDK oficial do Custom Widget -->
+  <script src="https://admin.tago.io/dist/custom-widget.min.js"></script>
+
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+  <style>
+    body { margin: 0; }
+    #chart { width: 100%; height: 400px; }
+  </style>
+</head>
+
+<body>
+  <div id="chart"></div>
+
+  <script>
+    let chart;
+
+    function renderChart(labels, values) {
+      if (!chart) {
+        chart = echarts.init(document.getElementById("chart"));
+      }
+
+      chart.setOption({
+        tooltip: { trigger: "axis" },
+        xAxis: {
+          type: "category",
+          data: labels
+        },
+        yAxis: {
+          type: "value"
+        },
+        series: [{
+          name: "Temperatura mínima",
+          type: "line",
+          smooth: true,
+          data: values
+        }]
+      });
+    }
+
+    function applyData(widgetData) {
+      const data = widgetData
+        .filter(d => d.variable === "temperature_min")
+        .sort((a, b) => new Date(a.time) - new Date(b.time));
+
+      if (!data.length) return;
+
+      const labels = data.map(d =>
+        new Date(d.time).toLocaleDateString("pt-BR")
+      );
+
+      const values = data.map(d => d.value);
+
+      renderChart(labels, values);
+    }
+
+    window.TagoIO.onStart((widget) => {
+      // inicialização
+      applyData(widget.data);
+    });
+
+    window.TagoIO.onRealtime((data) => {
+      // este listener é chamado sempre que novos dados chegam
+      // data é um array de “buckets”
+      
+      let allData = [];
+
+      data.forEach(bucket => {
+        // bucket.result é array de objetos com variable/value/time
+        allData = allData.concat(bucket.result);
+      });
+
+      applyData(allData);
+    });
+
+    window.TagoIO.ready();
+  </script>
+</body>
+</html>
