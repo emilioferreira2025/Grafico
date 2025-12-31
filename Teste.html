@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SDK oficial do Custom Widget TagoIO -->
+  <script src="https://admin.tago.io/dist/custom-widget.min.js"></script>
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box {
+      text-align: center;
+    }
+
+    .label {
+      font-size: 14px;
+      color: #bbbbbb;
+    }
+
+    .value {
+      font-size: 42px;
+      font-weight: bold;
+      margin-top: 6px;
+      color: #00e676;
+    }
+
+    .unit {
+      font-size: 16px;
+      color: #bbbbbb;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="label">Vresultado (Vi × Vr)</div>
+    <div class="value" id="result">0.00<span class="unit">V</span></div>
+  </div>
+
+  <script>
+    let Vi = null;
+    let Vr = null;
+
+    function updateResult() {
+      if (Vi !== null && Vr !== null) {
+        const Vresultado = Vi * Vr;
+        document.getElementById("result").innerHTML =
+          Vresultado.toFixed(2) + '<span class="unit"> V</span>';
+      }
+    }
+
+    // ===============================
+    // SDK TAGOIO – CARGA INICIAL
+    // ===============================
+    window.TagoIO.onStart(widget => {
+      widget.data.forEach(d => {
+        if (d.variable === "Vi") Vi = Number(d.value);
+        if (d.variable === "Vr") Vr = Number(d.value);
+      });
+      updateResult();
+    });
+
+    // ===============================
+    // SDK TAGOIO – TEMPO REAL
+    // ===============================
+    window.TagoIO.onRealtime(buckets => {
+      buckets.forEach(bucket => {
+        if (!bucket.result) return;
+
+        bucket.result.forEach(d => {
+          if (d.variable === "Vi") Vi = Number(d.value);
+          if (d.variable === "Vr") Vr = Number(d.value);
+        });
+      });
+      updateResult();
+    });
+
+    window.TagoIO.ready();
+  </script>
+</body>
+</html>
