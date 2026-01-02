@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://admin.tago.io/dist/custom-widget.min.js"></script>
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box {
+      text-align: center;
+      min-width: 240px;
+    }
+
+    .row {
+      font-size: 14px;
+      color: #00ff88;
+      margin-bottom: 4px;
+    }
+
+    .result {
+      font-size: 36px;
+      font-weight: bold;
+      color: #4fc3f7;
+      margin-top: 6px;
+    }
+
+    .status {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #ffb300;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="row">current_ipp1: <span id="ipp1">--</span></div>
+    <div class="row">current_ipp2: <span id="ipp2">--</span></div>
+
+    <div class="result" id="res">--</div>
+    <div class="status" id="status">Aguardando dados…</div>
+  </div>
+
+  <script>
+    let ipp1 = null;
+    let ipp2 = null;
+
+    function toNum(v) {
+      const n = Number(v);
+      return isNaN(n) ? null : n;
+    }
+
+    function calcular() {
+      document.getElementById("ipp1").innerText =
+        ipp1 !== null ? ipp1.toFixed(2) : "--";
+
+      document.getElementById("ipp2").innerText =
+        ipp2 !== null ? ipp2.toFixed(2) : "--";
+
+      if (ipp1 !== null && ipp2 !== null) {
+        const soma = ipp1 + ipp2;
+        document.getElementById("res").innerText = soma.toFixed(2);
+        document.getElementById("status").innerText =
+          "cálculo automático (current_ipp1 + current_ipp2)";
+      } else {
+        document.getElementById("res").innerText = "--";
+        document.getElementById("status").innerText =
+          "Aguardando current_ipp1 e current_ipp2";
+      }
+    }
+
+    // 🔹 1) CARGA INICIAL (ESSENCIAL)
+    window.TagoIO.onStart(widget => {
+      widget.data.forEach(d => {
+        if (d.variable === "current_ipp1") ipp1 = toNum(d.value);
+        if (d.variable === "current_ipp2") ipp2 = toNum(d.value);
+      });
+      calcular();
+    });
+
+    // 🔹 2) ATUALIZAÇÃO AUTOMÁTICA
+    window.TagoIO.onData(data => {
+      data.forEach(d => {
+        if (d.variable === "current_ipp1") ipp1 = toNum(d.value);
+        if (d.variable === "current_ipp2") ipp2 = toNum(d.value);
+      });
+      calcular();
+    });
+
+    window.TagoIO.ready();
+  </script>
+</body>
+</html>
