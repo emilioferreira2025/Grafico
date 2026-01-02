@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+
+  <!-- SDK oficial do Custom Widget TagoIO -->
+  <script src="https://admin.tago.io/dist/custom-widget.min.js"></script>
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000000;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .box {
+      text-align: center;
+      min-width: 220px;
+    }
+
+    .row {
+      font-size: 14px;
+      color: #bbbbbb;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: 22px;
+      font-weight: bold;
+      color: #00e676;
+    }
+
+    .result {
+      font-size: 40px;
+      font-weight: bold;
+      margin-top: 12px;
+      color: #4fc3f7;
+    }
+
+    .status {
+      font-size: 12px;
+      margin-top: 8px;
+      color: #ffb300;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <div class="row">Vi: <span id="vi">--</span></div>
+    <div class="row">Vr: <span id="vr">--</span></div>
+
+    <div class="result" id="result">--</div>
+    <div class="status" id="status">Aguardando dados…</div>
+  </div>
+
+  <script>
+    let vi = null;
+    let vr = null;
+
+    function toNumber(value) {
+      const n = Number(value);
+      return isNaN(n) ? null : n;
+    }
+
+    function updateUI() {
+      document.getElementById("vi").innerText = vi !== null ? vi.toFixed(2) : "--";
+      document.getElementById("vr").innerText = vr !== null ? vr.toFixed(2) : "--";
+
+      if (vi !== null && vr !== null) {
+        const resultado = vi * vr;
+        document.getElementById("result").innerText = resultado.toFixed(2);
+        document.getElementById("status").innerText = "Cálculo OK (vi × vr)";
+      } else {
+        document.getElementById("result").innerText = "--";
+        document.getElementById("status").innerText = "Aguardando vi e vr";
+      }
+    }
+
+    // ===============================
+    // SDK TAGOIO – CARGA INICIAL
+    // ===============================
+    window.TagoIO.onStart(widget => {
+      widget.data.forEach(d => {
+        if (d.variable === "vi") vi = toNumber(d.value);
+        if (d.variable === "vr") vr = toNumber(d.value);
+      });
+      updateUI();
+    });
+
+    // ===============================
+    // SDK TAGOIO – TEMPO REAL
+    // ===============================
+    window.TagoIO.onRealtime(buckets => {
+      buckets.forEach(bucket => {
+        if (!bucket.result) return;
+
+        bucket.result.forEach(d => {
+          if (d.variable === "vi") vi = toNumber(d.value);
+          if (d.variable === "vr") vr = toNumber(d.value);
+        });
+      });
+      updateUI();
+    });
+
+    window.TagoIO.ready();
+  </script>
+</body>
+</html>
